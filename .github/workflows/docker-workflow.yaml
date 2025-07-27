@@ -1,4 +1,4 @@
-name: Exploring Variables and Secrets
+name: docker task
 
 on:
   workflow_dispatch:
@@ -11,20 +11,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Docker Build
-        run: docker build -t docker.io/${{ vars.username }}/$IMAGE_NAME:latest .
+        run: docker build -t ${{ vars.reg }}/${{ vars.username }}/${{ env.IMAGE_NAME }}:latest .
 
       - name: Docker Login
-        run: docker login --username "${{ vars.username }}" --password "${{ secrets.PASSWORD }}"
+        run: echo "${{ secrets.PASSWORD }}" | docker login ${{ vars.reg }} --username "${{ vars.username }}" --password-stdin
 
       - name: Docker Publish
-        run: docker push docker.io/${{ vars.username }}/$IMAGE_NAME:latest
+        run: docker push ${{ vars.reg }}/${{ vars.username }}/${{ env.IMAGE_NAME }}:latest
 
   deploy:
     needs: docker
     runs-on: ubuntu-latest
     steps:
+      - name: Docker Login
+        run: echo "${{ secrets.PASSWORD }}" | docker login ${{ vars.reg }} --username "${{ vars.username }}" --password-stdin
+
       - name: Docker Run
-        run: docker run -d -p 8080:80 docker.io/${{ vars.username }}/$IMAGE_NAME:latest
+        run: docker run -d -p 8080:80 ${{ vars.reg }}/${{ vars.username }}/${{ env.IMAGE_NAME }}:latest
