@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ga-application
+  namespace: somaya
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ga-application
+  template:
+    metadata:
+      labels:
+        app: ga-application
+    spec:
+      containers:
+        - name: ga-application
+          image: somaya/ga-application:latest  # Will be replaced in workflow
+          ports:
+            - containerPort: 5000
+          env:
+            - name: MONGO_URL
+              value: "mongodb://mongo:27017/mydb"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ga-application
+  namespace: somaya
+spec:
+  selector:
+    app: ga-application
+  ports:
+    - port: 80
+      targetPort: 5000
+  type: ClusterIP
